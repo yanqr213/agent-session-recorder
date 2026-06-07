@@ -1,0 +1,10 @@
+diff --git a/src/exporter.py b/src/exporter.py
+index 1111111..2222222 100644
+--- a/src/exporter.py
++++ b/src/exporter.py
+@@ -1,3 +1,4 @@
+ from pathlib import Path
++from os import makedirs
+ 
+ def export(path):
+     Path(path).write_text("ok")
