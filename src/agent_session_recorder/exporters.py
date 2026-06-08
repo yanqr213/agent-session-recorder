@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
 from .model import SessionBundle
+from .timeline import build_timeline, render_timeline_markdown
 from .util import ensure_parent, portable_relpath, sha256_file, write_json
 
 
@@ -30,6 +31,7 @@ def to_json_payload(bundle: SessionBundle) -> Dict[str, Any]:
         "manifest": bundle.data,
         "inventory": bundle.inventory(),
         "integrity": {"ok": ok, "errors": errors},
+        "timeline": build_timeline(bundle),
     }
 
 
@@ -55,6 +57,7 @@ def to_markdown(bundle: SessionBundle) -> str:
     _section(lines, "Summary", _summaries(data.get("summaries", [])))
     _section(lines, "Risks", _bullets(data.get("risks", [])))
     _section(lines, "Follow-ups", _bullets(data.get("followups", [])))
+    _section(lines, "Timeline", _timeline_lines(bundle))
     if errors:
         _section(lines, "Integrity Errors", _bullets(errors))
     lines.append("## Attachment Inventory")
@@ -70,9 +73,12 @@ def to_markdown(bundle: SessionBundle) -> str:
 def write_zip(bundle: SessionBundle, output: Path) -> None:
     payload = json.dumps(to_json_payload(bundle), ensure_ascii=False, indent=2) + "\n"
     markdown = to_markdown(bundle)
+    timeline = build_timeline(bundle)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("session.json", payload)
         archive.writestr("session.md", markdown)
+        archive.writestr("timeline.json", json.dumps(timeline, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+        archive.writestr("timeline.md", render_timeline_markdown(timeline))
         for path in sorted(bundle.root.rglob("*")):
             if path.is_file():
                 rel = portable_relpath(path, bundle.root)
@@ -125,3 +131,15 @@ def _summaries(summaries: List[Dict[str, Any]]) -> Iterable[str]:
 def _bullets(items: List[str]) -> Iterable[str]:
     for item in items:
         yield f"- {item}"
+
+
+def _timeline_lines(bundle: SessionBundle) -> Iterable[str]:
+    timeline = build_timeline(bundle)
+    for event in timeline.get("events", []):
+        time = event.get("time") or "unknown"
+        yield "%s. `%s` **%s** - %s" % (
+            event.get("sequence", ""),
+            time,
+            event.get("title", ""),
+            event.get("details", ""),
+        )

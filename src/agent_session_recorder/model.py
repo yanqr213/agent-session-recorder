@@ -19,6 +19,7 @@ class CommandRecord:
     exit_code: Optional[int] = None
     started_at: str = ""
     ended_at: str = ""
+    recorded_at: str = ""
     stdout: str = ""
     stderr: str = ""
     note: str = ""
@@ -30,6 +31,7 @@ class CommandRecord:
             "exit_code": self.exit_code,
             "started_at": self.started_at,
             "ended_at": self.ended_at,
+            "recorded_at": self.recorded_at,
             "stdout": self.stdout,
             "stderr": self.stderr,
             "note": self.note,
@@ -44,6 +46,7 @@ class FileRecord:
     size: int
     role: str = "context"
     note: str = ""
+    added_at: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -53,6 +56,7 @@ class FileRecord:
             "size": self.size,
             "role": self.role,
             "note": self.note,
+            "added_at": self.added_at,
         }
 
 
@@ -118,6 +122,7 @@ class SessionBundle:
             exit_code=record.exit_code,
             started_at=record.started_at,
             ended_at=record.ended_at,
+            recorded_at=record.recorded_at or utc_now(),
             stdout=redactor.redact(record.stdout),
             stderr=redactor.redact(record.stderr),
             note=redactor.redact(record.note),
@@ -145,6 +150,7 @@ class SessionBundle:
             size=target.stat().st_size,
             role=redactor.redact(role),
             note=redactor.redact(note),
+            added_at=utc_now(),
         )
         self.data.setdefault("files", []).append(record.to_dict())
         self.save()
@@ -172,6 +178,7 @@ class SessionBundle:
             {
                 "type": payload["type"],
                 "source": payload["source"],
+                "imported_at": payload["imported_at"],
                 "bundle_path": portable_relpath(path, self.root),
                 "sha256": sha256_file(path),
                 "records": len(clean_records),
@@ -182,6 +189,7 @@ class SessionBundle:
                 {
                     "type": payload["type"],
                     "source": payload["source"],
+                    "imported_at": payload["imported_at"],
                     "bundle_path": portable_relpath(path, self.root),
                     "records": len(clean_records),
                 }

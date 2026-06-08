@@ -22,6 +22,7 @@ def test_json_export_creates_parent_directory(tmp_path):
     export_bundle(bundle, output, "json")
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["integrity"]["ok"] is True
+    assert payload["timeline"]["schema"] == "agent-session-recorder.timeline.v1"
 
 
 def test_zip_export_contains_bundle_files(tmp_path):
@@ -33,5 +34,7 @@ def test_zip_export_contains_bundle_files(tmp_path):
         names = set(archive.namelist())
     assert "session.json" in names
     assert "session.md" in names
+    assert "timeline.json" in names
+    assert "timeline.md" in names
     assert "SHA256SUMS" in names
     assert "bundle/manifest.json" in names

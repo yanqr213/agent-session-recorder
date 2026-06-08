@@ -10,6 +10,7 @@
 - Code review 之外还需要保留上下文文件、命令、测试输出和风险说明。
 - 安全团队希望离线检查 bundle 是否泄露 token、密码或私钥片段。
 - 平台团队想把 shell history、git diff、pytest/JUnit、Markdown notes、JSONL transcript 合并成统一证据包。
+- 团队希望把一次 agent run 按时间线复盘，快速回答“先做了什么、哪里失败、哪些证据被纳入 bundle”。
 
 ## 安装
 
@@ -50,6 +51,10 @@ agent-session-recorder summarize --session .asr/session-001
 agent-session-recorder doctor --session .asr/session-001 \
   --format markdown \
   --output dist/session-001-doctor.md
+
+agent-session-recorder timeline --session .asr/session-001 \
+  --format markdown \
+  --output dist/session-001-timeline.md
 
 agent-session-recorder export --session .asr/session-001 \
   --format markdown \
@@ -132,6 +137,8 @@ ZIP 中包含：
 
 - `session.json`
 - `session.md`
+- `timeline.json`
+- `timeline.md`
 - `SHA256SUMS`
 - `bundle/` 下的完整 session 目录副本
 
@@ -154,6 +161,18 @@ agent-session-recorder doctor --session .asr/my-session --fail-on warning
 ```
 
 默认只在 error 级问题上返回非零退出码；`--fail-on warning` 可用于更严格的 CI。
+
+### `timeline`
+
+把 session 中的创建时间、命令、附件、导入材料、测试证据、摘要、风险和后续项合并成可审计时间线。
+
+```bash
+agent-session-recorder timeline --session .asr/my-session
+agent-session-recorder timeline --session .asr/my-session --format json --output reports/timeline.json
+agent-session-recorder timeline --session .asr/my-session --format markdown --output reports/timeline.md
+```
+
+JSON 输出使用稳定 schema `agent-session-recorder.timeline.v1`，适合工单机器人、PR 评论、审计系统和内部质量看板消费。Markdown 输出适合直接贴到 review、事故复盘或交付说明里。`export --format json` 会内嵌 `timeline` 字段，`export --format zip` 会额外写入 `timeline.json` 和 `timeline.md`。
 
 ## Bundle 结构
 
@@ -204,6 +223,7 @@ CI 文件位于 `.github/workflows/ci.yml`。
 
 ```bash
 agent-session-recorder doctor --session .asr/my-session --format json --output reports/doctor.json --fail-on warning
+agent-session-recorder timeline --session .asr/my-session --format json --output reports/timeline.json
 agent-session-recorder export --session .asr/my-session --format zip --output dist/session.zip --check
 ```
 
@@ -228,6 +248,7 @@ Key properties:
 - Installable CLI: `agent-session-recorder`.
 - Markdown, JSON, and ZIP exports.
 - Doctor readiness reports for CI and review gates.
+- Timeline reports for chronological audit trails.
 - Built-in secret redaction.
 - Manifest with SHA-256 hashes and integrity checks.
 - Imports JSONL transcripts, shell history, git diff, pytest output, JUnit XML, and Markdown notes.
@@ -242,3 +263,23 @@ agent-session-recorder doctor --session .asr/my-session --format json --output r
 ```
 
 The doctor report checks integrity, failed commands, missing test evidence, missing imports, missing context files, and missing summaries. Use `--fail-on warning` when a CI workflow should require a complete review-ready bundle.
+
+Typical workflow:
+
+```bash
+agent-session-recorder init .asr/my-session --goal "ship a reviewed agent change"
+agent-session-recorder add-command --session .asr/my-session --cmd "pytest" --exit-code 0
+agent-session-recorder import-transcript --session .asr/my-session pytest-output.txt --type pytest
+agent-session-recorder summarize --session .asr/my-session
+agent-session-recorder timeline --session .asr/my-session --format markdown --output reports/timeline.md
+agent-session-recorder export --session .asr/my-session --format zip --output dist/session.zip --check
+```
+
+Timeline command:
+
+```bash
+agent-session-recorder timeline --session .asr/my-session
+agent-session-recorder timeline --session .asr/my-session --format json --output reports/timeline.json
+```
+
+The JSON timeline uses the stable schema `agent-session-recorder.timeline.v1`. It is designed for ticket bots, PR comments, audit systems, and internal quality dashboards. Markdown timelines are ready to paste into reviews or delivery notes. JSON exports include a `timeline` field, and ZIP exports include `timeline.json` plus `timeline.md`.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-session-recorder"
-version = "0.2.0"
+version = "0.3.0"
 description = "Offline CLI for recording auditable AI coding agent session bundles."
 readme = "README.md"
 requires-python = ">=3.9"

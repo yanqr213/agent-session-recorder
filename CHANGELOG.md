@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-06-09
+
+- Added `agent-session-recorder timeline` for chronological audit trails in Markdown or JSON.
+- Added timeline data to JSON exports and `timeline.json` / `timeline.md` to ZIP exports.
+- Added timeline sections to Markdown exports so PRs and tickets can show what happened in order.
+- Added tests and CI smoke coverage for timeline output.
+
 ## 0.2.0 - 2026-06-09
 
 - Added `agent-session-recorder doctor` for bundle readiness checks.

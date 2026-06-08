@@ -26,3 +26,6 @@ jobs:
           agent-session-recorder init .asr/ci --goal "ci smoke"
           agent-session-recorder doctor --session .asr/ci --format json --output reports/doctor.json
           python -c "import json, pathlib; data=json.loads(pathlib.Path('reports/doctor.json').read_text(encoding='utf-8')); assert data['finding_counts']['warning'] >= 1"
+          agent-session-recorder add-command --session .asr/ci --cmd "pytest" --exit-code 0
+          agent-session-recorder timeline --session .asr/ci --format json --output reports/timeline.json
+          python -c "import json, pathlib; data=json.loads(pathlib.Path('reports/timeline.json').read_text(encoding='utf-8')); assert data['schema'] == 'agent-session-recorder.timeline.v1'; assert data['summary']['commands'] == 1"

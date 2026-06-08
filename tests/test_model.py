@@ -19,6 +19,7 @@ def test_add_command_redacts_output(tmp_path):
     command = SessionBundle.load(bundle.root).data["commands"][0]["command"]
     assert "[REDACTED]" in command
     assert fake_bearer not in command
+    assert SessionBundle.load(bundle.root).data["commands"][0]["recorded_at"]
 
 
 def test_add_file_copies_and_hashes(tmp_path):
@@ -29,6 +30,7 @@ def test_add_file_copies_and_hashes(tmp_path):
     assert (bundle.root / record.bundle_path).read_text(encoding="utf-8") == "content"
     assert len(record.sha256) == 64
     assert record.size == len("content")
+    assert record.added_at
 
 
 def test_check_detects_hash_mismatch(tmp_path):
@@ -48,4 +50,5 @@ def test_add_import_registers_test_evidence(tmp_path):
     loaded = SessionBundle.load(bundle.root)
     assert path.exists()
     assert loaded.data["imports"][0]["records"] == 1
+    assert loaded.data["imports"][0]["imported_at"]
     assert loaded.data["test_evidence"][0]["type"] == "pytest"

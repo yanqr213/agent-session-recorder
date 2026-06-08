@@ -48,6 +48,22 @@ def test_cli_doctor_outputs_json_and_can_fail_on_warning(tmp_path):
     assert strict.returncode == 1
 
 
+def test_cli_timeline_outputs_json_and_markdown(tmp_path):
+    session = tmp_path / "session"
+    assert run_cli("init", str(session), "--goal", "record").returncode == 0
+    assert run_cli("add-command", "--session", str(session), "--cmd", "pytest", "--exit-code", "0").returncode == 0
+    json_output = tmp_path / "timeline.json"
+    md_output = tmp_path / "timeline.md"
+
+    json_result = run_cli("timeline", "--session", str(session), "--format", "json", "--output", str(json_output))
+    md_result = run_cli("timeline", "--session", str(session), "--format", "markdown", "--output", str(md_output))
+
+    assert json_result.returncode == 0, json_result.stderr
+    assert md_result.returncode == 0, md_result.stderr
+    assert json.loads(json_output.read_text(encoding="utf-8"))["summary"]["commands"] == 1
+    assert "Agent Session Timeline" in md_output.read_text(encoding="utf-8")
+
+
 def test_cli_add_file_import_and_export(tmp_path):
     session = tmp_path / "session"
     context = tmp_path / "context.md"
@@ -62,6 +78,7 @@ def test_cli_add_file_import_and_export(tmp_path):
     assert result.returncode == 0, result.stderr
     assert output.exists()
     assert "Context Files" in output.read_text(encoding="utf-8")
+    assert "Timeline" in output.read_text(encoding="utf-8")
 
 
 def test_cli_export_check_fails_on_tamper(tmp_path):

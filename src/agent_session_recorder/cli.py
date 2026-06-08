@@ -13,6 +13,7 @@ from .importers import import_records
 from .model import CommandRecord, SessionBundle
 from .redaction import Redactor
 from .summarizer import build_summary
+from .timeline import build_timeline, render_timeline_json, render_timeline_markdown
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:
@@ -93,6 +94,12 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--output", type=Path)
     doctor.add_argument("--fail-on", choices=["error", "warning"], default="error")
     doctor.set_defaults(func=cmd_doctor)
+
+    timeline = subparsers.add_parser("timeline", help="Render a chronological audit timeline for a session bundle.")
+    add_common_session_arg(timeline)
+    timeline.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    timeline.add_argument("--output", type=Path)
+    timeline.set_defaults(func=cmd_timeline)
 
     return parser
 
@@ -212,3 +219,15 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     else:
         print(output, end="")
     return doctor_exit_code(report, args.fail_on)
+
+
+def cmd_timeline(args: argparse.Namespace) -> int:
+    bundle = load_bundle(args)
+    timeline = build_timeline(bundle)
+    output = render_timeline_json(timeline) if args.format == "json" else render_timeline_markdown(timeline)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(output, encoding="utf-8")
+    else:
+        print(output, end="")
+    return 0
