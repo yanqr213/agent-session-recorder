@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Iterable, Optional
 
+from .doctor import doctor_exit_code, render_doctor_json, render_doctor_markdown, run_doctor
 from .exporters import export_bundle
 from .importers import import_records
 from .model import CommandRecord, SessionBundle
@@ -85,6 +86,13 @@ def build_parser() -> argparse.ArgumentParser:
     check = subparsers.add_parser("check", help="Validate bundle integrity without exporting.")
     add_common_session_arg(check)
     check.set_defaults(func=cmd_check)
+
+    doctor = subparsers.add_parser("doctor", help="Check whether a bundle is ready for review or CI.")
+    add_common_session_arg(doctor)
+    doctor.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    doctor.add_argument("--output", type=Path)
+    doctor.add_argument("--fail-on", choices=["error", "warning"], default="error")
+    doctor.set_defaults(func=cmd_doctor)
 
     return parser
 
@@ -192,3 +200,15 @@ def cmd_check(args: argparse.Namespace) -> int:
     for error in errors:
         print(error, file=sys.stderr)
     return 1
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    bundle = load_bundle(args)
+    report = run_doctor(bundle)
+    output = render_doctor_json(report) if args.format == "json" else render_doctor_markdown(report)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(output, encoding="utf-8")
+    else:
+        print(output, end="")
+    return doctor_exit_code(report, args.fail_on)

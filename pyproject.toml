@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-session-recorder"
-version = "0.1.0"
+version = "0.2.0"
 description = "Offline CLI for recording auditable AI coding agent session bundles."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -36,8 +36,8 @@ dev = ["pytest>=7.4"]
 agent-session-recorder = "agent_session_recorder.cli:main"
 
 [project.urls]
-Homepage = "https://agent-session-recorder.test"
-Issues = "https://agent-session-recorder.test/issues"
+Homepage = "https://github.com/yanqr213/agent-session-recorder"
+Issues = "https://github.com/yanqr213/agent-session-recorder/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

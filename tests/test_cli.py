@@ -34,6 +34,20 @@ def test_cli_add_command_and_summarize(tmp_path):
     assert data["summaries"]
 
 
+def test_cli_doctor_outputs_json_and_can_fail_on_warning(tmp_path):
+    session = tmp_path / "session"
+    assert run_cli("init", str(session), "--goal", "record").returncode == 0
+    output = tmp_path / "doctor.json"
+
+    result = run_cli("doctor", "--session", str(session), "--format", "json", "--output", str(output))
+    strict = run_cli("doctor", "--session", str(session), "--fail-on", "warning")
+
+    assert result.returncode == 0, result.stderr
+    assert output.exists()
+    assert json.loads(output.read_text(encoding="utf-8"))["finding_counts"]["warning"] >= 1
+    assert strict.returncode == 1
+
+
 def test_cli_add_file_import_and_export(tmp_path):
     session = tmp_path / "session"
     context = tmp_path / "context.md"

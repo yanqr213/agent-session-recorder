@@ -1,10 +1,14 @@
 # Changelog
 
+## 0.2.0 - 2026-06-09
+
+- Added `agent-session-recorder doctor` for bundle readiness checks.
+- Added JSON and Markdown doctor reports with CI-friendly `--fail-on error|warning` behavior.
+- Added structured checks for integrity, missing evidence, missing summaries, missing test imports, and failed commands.
+- Exposed doctor helpers in the Python API.
+- Updated project URLs and GitHub Actions to current official action versions.
+
 ## 0.1.0 - 2026-06-08
 
-- Initial local release of `agent-session-recorder`.
-- Added installable CLI with `init`, `add-command`, `add-file`, `import-transcript`, `summarize`, and `export`.
-- Added Markdown, JSON, and ZIP exports.
-- Added redaction, manifest hashing, attachment inventory, and bundle integrity checks.
-- Added import support for JSONL transcripts, Markdown notes, shell history, git diff patches, pytest text output, and JUnit XML.
-- Added examples, CI, and pytest coverage for model, redaction, import, export, and CLI behavior.
+- Initial public release.
+- Added session initialization, command capture, file attachments, imports, deterministic summaries, integrity checks, Markdown/JSON/ZIP exports, redaction, examples, and CI.

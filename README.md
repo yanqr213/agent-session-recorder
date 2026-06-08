@@ -47,6 +47,10 @@ agent-session-recorder import-transcript --session .asr/session-001 pytest-outpu
 
 agent-session-recorder summarize --session .asr/session-001
 
+agent-session-recorder doctor --session .asr/session-001 \
+  --format markdown \
+  --output dist/session-001-doctor.md
+
 agent-session-recorder export --session .asr/session-001 \
   --format markdown \
   --output dist/session-001.md \
@@ -139,6 +143,18 @@ ZIP 中包含：
 agent-session-recorder check --session .asr/my-session
 ```
 
+### `doctor`
+
+检查 bundle 是否足够进入 review、审计或 CI 归档。它会验证完整性、失败命令、测试证据、上下文附件、导入材料和摘要状态。
+
+```bash
+agent-session-recorder doctor --session .asr/my-session
+agent-session-recorder doctor --session .asr/my-session --format json --output reports/doctor.json
+agent-session-recorder doctor --session .asr/my-session --fail-on warning
+```
+
+默认只在 error 级问题上返回非零退出码；`--fail-on warning` 可用于更严格的 CI。
+
 ## Bundle 结构
 
 ```text
@@ -184,6 +200,13 @@ pytest
 
 CI 文件位于 `.github/workflows/ci.yml`。
 
+严格一点的流水线可以在导出前加入 doctor gate：
+
+```bash
+agent-session-recorder doctor --session .asr/my-session --format json --output reports/doctor.json --fail-on warning
+agent-session-recorder export --session .asr/my-session --format zip --output dist/session.zip --check
+```
+
 ## examples
 
 `examples/` 里有可直接运行的 shell 和 PowerShell 示例，会生成一个本地 session、导入 JSONL/pytest/git diff，并导出 Markdown/JSON/ZIP。
@@ -204,8 +227,18 @@ Key properties:
 - Python 3.9+ with no runtime dependencies.
 - Installable CLI: `agent-session-recorder`.
 - Markdown, JSON, and ZIP exports.
+- Doctor readiness reports for CI and review gates.
 - Built-in secret redaction.
 - Manifest with SHA-256 hashes and integrity checks.
 - Imports JSONL transcripts, shell history, git diff, pytest output, JUnit XML, and Markdown notes.
 
 This tool is local-first. It does not publish bundles or send data to any service.
+
+Doctor command:
+
+```bash
+agent-session-recorder doctor --session .asr/my-session
+agent-session-recorder doctor --session .asr/my-session --format json --output reports/doctor.json --fail-on warning
+```
+
+The doctor report checks integrity, failed commands, missing test evidence, missing imports, missing context files, and missing summaries. Use `--fail-on warning` when a CI workflow should require a complete review-ready bundle.

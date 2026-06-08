@@ -12,12 +12,17 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: python -m pip install -e ".[dev]"
       - name: Test
         run: pytest
+      - name: Smoke doctor report
+        run: |
+          agent-session-recorder init .asr/ci --goal "ci smoke"
+          agent-session-recorder doctor --session .asr/ci --format json --output reports/doctor.json
+          python -c "import json, pathlib; data=json.loads(pathlib.Path('reports/doctor.json').read_text(encoding='utf-8')); assert data['finding_counts']['warning'] >= 1"
